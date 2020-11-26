@@ -1,9 +1,15 @@
 import os
 import pathlib
+import re
+
+def lookForIcon(line):
+    if line.find("data-icon") > -1:
+        lst = re.findall(r'"(.*?)(?<!\\)"', line)
+        print(line)
+        print(lst)
 
 def scanLine(line):
-    print(line)
-    # print("line {} contents {}".format(cnt, line))
+    lookForIcon(line)
 
 def scanFile(filePath):
     print('scan')
@@ -11,14 +17,14 @@ def scanFile(filePath):
         for line in fp:
             scanLine(line)
 
-def walk(path):
+def scanDir(path):
     for root, dirs, files in os.walk(path, topdown=False):
         for name in files:
             scanFile(os.path.join(root, name))
         for name in dirs:
             print('folder')
-            walk(os.path.join(root, name))
+            scanDir(os.path.join(root, name))
 
 htmlPath = pathlib.Path(__file__).parent.absolute()
 htmlPath = htmlPath / "static"
-walk(htmlPath)
+scanDir(htmlPath)
