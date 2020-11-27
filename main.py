@@ -59,20 +59,11 @@ class Parser:
         return soup
 
     def updateLine(self, line, soup):
-        # TODO: add new icon class, remove data-icon
         newClassName = self.mapIconClassFromAttr(line, soup)
         if newClassName:
-            soup.find("div")['class'] = ' '.join(map(str, self.getClasses(line, soup)[0])) + ' ' + 'icon-' + newClassName
+            soup.find("div")['class'] = ' '.join(map(str, self.getClasses(line, soup)[0])) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
             soup = self.removeAttr(soup)
-            # print('***')
-            print(soup)
-            # print(soup.get('class'))
-            # print('***')
-            # soup['class'] = soup.get('class', []) + ['icon-' + newClassName]
-            # print('^^^')
-            # print(soup)
-            # print('^^^')
-            # self.writeResult('THIS LINE WILL BE CHANGED TO ADD CLASS - icon-' + newClassName)
+            self.writeResult(str(soup))
 
     def find(self, arr , iconValue):
         for x in arr:
