@@ -38,24 +38,15 @@ class Parser:
                     self.scan.line(line)
 
         def line(self, line):
-            self.outerParser.lookForIcon(line)
+            soup = self.outerParser.makeSoup(line)
+            self.outerParser.updateLine(line, soup)
 
-    def lookForIcon(self, line):
-        if line.find("data-icon") > -1:
-            soup = BeautifulSoup(line, 'html.parser')
-            classResult = self.getClasses(line, soup)
-            if classResult:
-                self.updateLine(line, soup)
-            else:
-                self.addClassToLine(line,soup)
-        else:
-            self.writeResult(line)
+    def makeSoup(self, line):
+        soup = BeautifulSoup(line, 'html.parser')
+        return soup
 
-    def writeResult(self, line):
-        self.newFile.write(line)
-
-    def addClassToLine(self, line, soup):
-        self.writeResult('THIS LINE WILL BE CHANGED')
+    def writeResult(self, newLine):
+        self.newFile.write(newLine)
 
     def removeAttr(self,soup):
         for tag in soup.find_all(lambda t: any(i.startswith('data-') for i in t.attrs)):
@@ -67,9 +58,14 @@ class Parser:
     def updateLine(self, line, soup):
         newClassName = self.mapIconClassFromAttr(line, soup)
         if newClassName:
-            soup.find("div")['class'] = ' '.join(map(str, self.getClasses(line, soup)[0])) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
+            if self.getClasses(line, soup):
+                soup.find("div")['class'] = ' '.join(map(str, self.getClasses(line, soup)[0])) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
+            else:
+                soup.find("div")['class'] = 'show-icon icon-' + newClassName
             soup = self.removeAttr(soup)
             self.writeResult(str(soup))
+        else:
+            self.writeResult(line)
 
     def find(self, arr , iconValue):
         for x in arr:
@@ -77,6 +73,7 @@ class Parser:
                 return x["className"]
 
     def getClasses(self, line, soup):
+        print('getClasses: ', [line["class"] for line in soup.find_all() if "class" in line.attrs])
         return [line["class"] for line in soup.find_all() if "class" in line.attrs]
 
     def getIconValue(self, line, soup):
@@ -84,7 +81,10 @@ class Parser:
 
     def mapIconClassFromAttr(self, line, soup):
         iconValue = self.getIconValue(line, soup)
-        newClassName = self.find(iconMap , iconValue[0])
+        if iconValue:
+            newClassName = self.find(iconMap , iconValue[0])
+        else:
+            newClassName = False
         return newClassName
 
 if __name__ == '__main__':
