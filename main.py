@@ -4,6 +4,8 @@ from pathlib import Path
 import re
 from bs4 import BeautifulSoup
 
+from iconMap import iconMap
+
 class Parser:
     def __init__(self, scriptPath):
         self.definePaths(scriptPath)
@@ -35,7 +37,6 @@ class Parser:
     def lookForIcon(self, line):
         if line.find("data-icon") > -1:
             soup = BeautifulSoup(line, 'html.parser')
-            iconValue = self.getIconValue(line, soup)
             classResult = self.getClasses(line, soup)
             if classResult:
                 self.updateLine(line, soup)
@@ -52,13 +53,25 @@ class Parser:
 
     def updateLine(self, line, soup):
         # TODO: add new icon class, remove data-icon
-        self.writeResult('THIS LINE WILL BE CHANGED')
+        newClassName = self.mapIconClassFromAttr(line, soup)
+        if newClassName:
+            self.writeResult('THIS LINE WILL BE CHANGED TO ADD CLASS - icon-' + newClassName)
+
+    def find(self, arr , iconValue):
+        for x in arr:
+            if x["oldCode"] == iconValue:
+                return x["className"]
 
     def getClasses(self, line, soup):
         return [line["class"] for line in soup.find_all() if "class" in line.attrs]
 
     def getIconValue(self, line, soup):
         return [line["data-icon"] for line in soup.find_all() if "data-icon" in line.attrs]
+
+    def mapIconClassFromAttr(self, line, soup):
+        iconValue = self.getIconValue(line, soup)
+        newClassName = self.find(iconMap , iconValue[0])
+        return newClassName
 
 if __name__ == '__main__':
     scriptPath = pathlib.Path(__file__).parent.absolute()
