@@ -62,7 +62,7 @@ class Parser:
         # TODO: add new icon class, remove data-icon
         newClassName = self.mapIconClassFromAttr(line, soup)
         if newClassName:
-            soup.find("div")['class'] = newClassName + ' '.join(map(str, self.getClasses(line, soup)))
+            soup.find("div")['class'] = ' '.join(map(str, self.getClasses(line, soup)[0])) + ' ' + 'icon-' + newClassName
             soup = self.removeAttr(soup)
             # print('***')
             print(soup)
