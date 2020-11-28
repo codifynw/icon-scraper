@@ -22,7 +22,7 @@ class Parser:
     def clean(self, file):
         attributes = self.getAttributes()
         if attributes:
-            for attribute in attributes:
+            for attribute in list(set(attributes)):
                 newClassName = self.mapIconClassFromAttr(attribute)
                 elementsWithAttribute = self.getElementByAttribute(attribute)
                 for element in elementsWithAttribute:
