@@ -16,6 +16,19 @@ class Parser:
         self.srcPath = scriptPath / "static"
         self.distPath = scriptPath / "__dist/"
 
+    def clean(self, file):
+        attrArray = [line["data-icon"] for line in self.soup.find_all() if "data-icon" in line.attrs]
+        if attrArray:
+            for attribute in attrArray:
+                newClassName = self.find(iconMap, attribute)
+                # self.getElementByAttribute(attribute)
+            self.removeAttr()
+        self.writeResult()
+
+    # def getElementByAttribute(self, attribute):
+    #     print(attribute)
+    #     print([item for item in self.soup.find_all(attrs={'data-icon' : attribute})])
+
     class Scan:
         def __init__(self, parser):
             self.outerParser = parser
@@ -25,35 +38,61 @@ class Parser:
             for root, dirs, files in os.walk(self.outerParser.srcPath, topdown=False):
                 for file in files:
                     if file.split('.')[1] == 'html':
-                        path_file = os.path.join(root,file)
-                        pathInStatic = root.split('icon-scraper/static/')[1]
-                        filePath = os.path.join(self.outerParser.distPath,pathInStatic)
-                        Path(filePath).mkdir(parents=True, exist_ok=True)
-                        self.outerParser.newFile = open(os.path.join(filePath,file), "w+")
+                        self.outerParser.createNewFile(root,file)
                         self.scan.file(os.path.join(root, file))
 
         def file(self, filePath):
-            with open(filePath) as fp:
-                for line in fp:
-                    self.scan.line(line)
+            with open(filePath) as file:
+                self.outerParser.makeSoup(file)
+                self.outerParser.clean(file)
 
-        def line(self, line):
-            soup = self.outerParser.makeSoup(line)
-            self.outerParser.updateLine(line, soup)
+    def makeSoup(self, file):
+        self.soup = BeautifulSoup(file, 'html.parser')
 
-    def makeSoup(self, line):
-        soup = BeautifulSoup(line, 'html.parser')
-        return soup
+    def createNewFile(self, root, file):
+        pathInStatic = root.split('icon-scraper/static/')[1]
+        newFilePath = os.path.join(self.distPath,pathInStatic)
+        Path(newFilePath).mkdir(parents=True, exist_ok=True)
+        self.newFile = open(os.path.join(newFilePath,file), "w+")
 
-    def writeResult(self, newLine):
-        self.newFile.write(newLine)
+    def soup_prettify2(self, soup, desired_indent): #where desired_indent is number of spaces as an int()
+    	pretty_soup = str()
+    	previous_indent = 0
+    	for line in soup.prettify().split("\n"): # iterate over each line of a prettified soup
+    		current_indent = str(line).find("<") # returns the index for the opening html tag '<'
+    		# which is also represents the number of spaces in the lines indentation
+    		if current_indent == -1 or current_indent > previous_indent + 2:
+    			current_indent = previous_indent + 1
+    			# str.find() will equal -1 when no '<' is found. This means the line is some kind
+    			# of text or script instead of an HTML element and should be treated as a child
+    			# of the previous line. also, current_indent should never be more than previous + 1.
+    		previous_indent = current_indent
+    		pretty_soup += self.write_new_line(line, current_indent, desired_indent)
+    	return pretty_soup
 
-    def removeAttr(self,soup):
-        for tag in soup.find_all(lambda t: any(i.startswith('data-') for i in t.attrs)):
+
+    def write_new_line(self, line, current_indent, desired_indent):
+    	new_line = ""
+    	spaces_to_add = (current_indent * desired_indent) - current_indent
+    	if spaces_to_add > 0:
+    		for i in range(spaces_to_add):
+    			new_line += " "
+    	new_line += str(line) + "\n"
+    	return new_line
+
+    def writeResult(self):
+        print('***')
+        print('***')
+        print(self.soup_prettify2(self.soup, desired_indent=4))
+        print('***')
+        print('***')
+        self.newFile.write(self.soup_prettify2(self.soup, desired_indent=4))
+
+    def removeAttr(self):
+        for tag in self.soup.find_all(lambda t: any(i.startswith('data-') for i in t.attrs)):
             for attr in list(tag.attrs):
                 if attr.startswith('data-icon'):
                     del tag.attrs[attr]
-        return soup
 
     def updateLine(self, line, soup):
         newClassName = self.mapIconClassFromAttr(line, soup)
@@ -62,7 +101,7 @@ class Parser:
                 soup.find("div")['class'] = ' '.join(map(str, self.getClasses(line, soup)[0])) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
             else:
                 soup.find("div")['class'] = 'show-icon icon-' + newClassName
-            soup = self.removeAttr(soup)
+            soup = self.removeAttr()
             self.writeResult(str(soup))
         else:
             self.writeResult(line)
@@ -73,13 +112,12 @@ class Parser:
                 return x["className"]
 
     def getClasses(self, line, soup):
-        print('getClasses: ', [line["class"] for line in soup.find_all() if "class" in line.attrs])
         return [line["class"] for line in soup.find_all() if "class" in line.attrs]
 
     def getIconValue(self, line, soup):
         return [line["data-icon"] for line in soup.find_all() if "data-icon" in line.attrs]
 
-    def mapIconClassFromAttr(self, line, soup):
+    def mapIconClassFromAttr(self, iconValue, soup):
         iconValue = self.getIconValue(line, soup)
         if iconValue:
             newClassName = self.find(iconMap , iconValue[0])
