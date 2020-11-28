@@ -3,8 +3,8 @@ import pathlib
 from pathlib import Path
 import re
 from bs4 import BeautifulSoup
-
 from iconMap import iconMap
+import shutil
 
 class Parser:
     def __init__(self, scriptPath):
@@ -13,7 +13,7 @@ class Parser:
         self.scan.staticDir()
 
     def definePaths(self, scriptPath):
-        self.srcPath = scriptPath / "static"
+        self.srcPath = scriptPath / "originalStatic"
         self.distPath = scriptPath / "__dist/"
 
     def getAttributes(self):
@@ -46,9 +46,14 @@ class Parser:
         def staticDir(self):
             for root, dirs, files in os.walk(self.outerParser.srcPath, topdown=False):
                 for file in files:
-                    if file.split('.')[1] == 'html':
+                    print('file: ', file)
+                    if file.split('.')[-1] == 'html':
                         self.outerParser.createNewFile(root,file)
                         self.scan.file(os.path.join(root, file))
+                    else:
+                        # simply copy
+                        self.outerParser.simplyCopy(root,file)
+
 
         def file(self, filePath):
             with open(filePath) as file:
@@ -59,7 +64,7 @@ class Parser:
         self.soup = BeautifulSoup(file, 'html.parser')
 
     def createNewFile(self, root, file):
-        pathInStatic = root.split('icon-scraper/static/')[1]
+        pathInStatic = root.split('icon-scraper/originalStatic/')[1]
         newFilePath = os.path.join(self.distPath,pathInStatic)
         Path(newFilePath).mkdir(parents=True, exist_ok=True)
         self.newFile = open(os.path.join(newFilePath,file), "w+")
@@ -87,6 +92,12 @@ class Parser:
     def writeResult(self):
         self.newFile.write(self.soup_prettify2(self.soup, desired_indent=4))
 
+    def simplyCopy(self, root, fileName):
+        originalPath = os.path.join(root,fileName)
+        newFilePath = os.path.join(root,fileName).replace('originalStatic', '__dist')
+        os.makedirs(os.path.dirname(newFilePath), exist_ok=True)
+        shutil.copyfile(originalPath, newFilePath)
+
     def removeAttr(self):
         for tag in self.soup.find_all(lambda t: any(i.startswith('data-') for i in t.attrs)):
             for attr in list(tag.attrs):
@@ -95,11 +106,11 @@ class Parser:
 
     def find(self, iconValue):
         for x in iconMap:
-            if hasattr(x, 'oldCode'):
-                if x["oldCode"] == iconValue:
+            if 'oldIcon' in x:
+                if x["oldIcon"] == iconValue:
                     return x["className"]
-                else:
-                    print('FOUND ELEMENT WITHOUT CODE IN MAP: ', iconValue)
+            # else:
+                # print('FOUND ELEMENT WITHOUT CODE IN MAP: ', iconValue)
 
     def mapIconClassFromAttr(self, iconValue):
         if iconValue:
