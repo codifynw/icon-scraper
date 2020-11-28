@@ -12,10 +12,6 @@ iconMap = [
         "oldCode": "}"
     },
     {
-        "className": "icon-drag_indicator",
-        "oldIcon": "r"
-    },
-    {
         "className": "icon-plus",
         "oldIcon": "j"
     },
