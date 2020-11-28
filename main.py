@@ -64,17 +64,13 @@ class Parser:
         Path(newFilePath).mkdir(parents=True, exist_ok=True)
         self.newFile = open(os.path.join(newFilePath,file), "w+")
 
-    def soup_prettify2(self, soup, desired_indent): #where desired_indent is number of spaces as an int()
+    def soup_prettify2(self, soup, desired_indent):
     	pretty_soup = str()
     	previous_indent = 0
-    	for line in soup.prettify().split("\n"): # iterate over each line of a prettified soup
-    		current_indent = str(line).find("<") # returns the index for the opening html tag '<'
-    		# which is also represents the number of spaces in the lines indentation
+    	for line in soup.prettify().split("\n"):
+    		current_indent = str(line).find("<")
     		if current_indent == -1 or current_indent > previous_indent + 2:
     			current_indent = previous_indent + 1
-    			# str.find() will equal -1 when no '<' is found. This means the line is some kind
-    			# of text or script instead of an HTML element and should be treated as a child
-    			# of the previous line. also, current_indent should never be more than previous + 1.
     		previous_indent = current_indent
     		pretty_soup += self.write_new_line(line, current_indent, desired_indent)
     	return pretty_soup
