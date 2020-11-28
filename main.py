@@ -16,18 +16,27 @@ class Parser:
         self.srcPath = scriptPath / "static"
         self.distPath = scriptPath / "__dist/"
 
+    def getAttributes(self):
+        return [line["data-icon"] for line in self.soup.find_all() if "data-icon" in line.attrs]
+
     def clean(self, file):
-        attrArray = [line["data-icon"] for line in self.soup.find_all() if "data-icon" in line.attrs]
-        if attrArray:
-            for attribute in attrArray:
-                newClassName = self.find(iconMap, attribute)
-                # self.getElementByAttribute(attribute)
+        attributes = self.getAttributes()
+        if attributes:
+            for attribute in attributes:
+                newClassName = self.mapIconClassFromAttr(attribute)
+                elementsWithAttribute = self.getElementByAttribute(attribute)
+                for element in elementsWithAttribute:
+                    classes = element.get_attribute_list('class')
+                    if newClassName:
+                        if classes:
+                            element['class'] = ' '.join(map(str, element.get_attribute_list('class'))) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
+                        else:
+                            element['class'] = 'show-icon icon-' + newClassName
             self.removeAttr()
         self.writeResult()
 
-    # def getElementByAttribute(self, attribute):
-    #     print(attribute)
-    #     print([item for item in self.soup.find_all(attrs={'data-icon' : attribute})])
+    def getElementByAttribute(self, attribute):
+        return [item for item in self.soup.find_all(attrs={'data-icon' : attribute})]
 
     class Scan:
         def __init__(self, parser):
@@ -81,11 +90,6 @@ class Parser:
     	return new_line
 
     def writeResult(self):
-        print('***')
-        print('***')
-        print(self.soup_prettify2(self.soup, desired_indent=4))
-        print('***')
-        print('***')
         self.newFile.write(self.soup_prettify2(self.soup, desired_indent=4))
 
     def removeAttr(self):
@@ -106,8 +110,8 @@ class Parser:
         else:
             self.writeResult(line)
 
-    def find(self, arr , iconValue):
-        for x in arr:
+    def find(self, iconValue):
+        for x in iconMap:
             if x["oldCode"] == iconValue:
                 return x["className"]
 
@@ -117,10 +121,9 @@ class Parser:
     def getIconValue(self, line, soup):
         return [line["data-icon"] for line in soup.find_all() if "data-icon" in line.attrs]
 
-    def mapIconClassFromAttr(self, iconValue, soup):
-        iconValue = self.getIconValue(line, soup)
+    def mapIconClassFromAttr(self, iconValue):
         if iconValue:
-            newClassName = self.find(iconMap , iconValue[0])
+            newClassName = self.find(iconValue)
         else:
             newClassName = False
         return newClassName
