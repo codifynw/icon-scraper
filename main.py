@@ -95,8 +95,11 @@ class Parser:
 
     def find(self, iconValue):
         for x in iconMap:
-            if x["oldCode"] == iconValue:
-                return x["className"]
+            if hasattr(x, 'oldCode'):
+                if x["oldCode"] == iconValue:
+                    return x["className"]
+                else:
+                    print('FOUND ELEMENT WITHOUT CODE IN MAP: ', iconValue)
 
     def mapIconClassFromAttr(self, iconValue):
         if iconValue:
