@@ -29,14 +29,10 @@ class Parser:
                     classes = element.get_attribute_list('class')
                     if newClassName:
                         if None in classes:
-                            print('if')
-                            print('classes: ', classes)
                             element['class'] = 'show-icon icon-' + newClassName
                         else:
-                            print('else')
-                            print('classes: ', classes)
                             element['class'] = ' '.join(map(str, element.get_attribute_list('class'))) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
-            self.removeAttr()
+                        del element.attrs["data-icon"]
         self.writeResult()
 
     def getElementByAttribute(self, attribute):
