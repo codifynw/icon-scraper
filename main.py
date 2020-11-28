@@ -98,28 +98,10 @@ class Parser:
                 if attr.startswith('data-icon'):
                     del tag.attrs[attr]
 
-    def updateLine(self, line, soup):
-        newClassName = self.mapIconClassFromAttr(line, soup)
-        if newClassName:
-            if self.getClasses(line, soup):
-                soup.find("div")['class'] = ' '.join(map(str, self.getClasses(line, soup)[0])) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
-            else:
-                soup.find("div")['class'] = 'show-icon icon-' + newClassName
-            soup = self.removeAttr()
-            self.writeResult(str(soup))
-        else:
-            self.writeResult(line)
-
     def find(self, iconValue):
         for x in iconMap:
             if x["oldCode"] == iconValue:
                 return x["className"]
-
-    def getClasses(self, line, soup):
-        return [line["class"] for line in soup.find_all() if "class" in line.attrs]
-
-    def getIconValue(self, line, soup):
-        return [line["data-icon"] for line in soup.find_all() if "data-icon" in line.attrs]
 
     def mapIconClassFromAttr(self, iconValue):
         if iconValue:
