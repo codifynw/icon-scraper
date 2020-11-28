@@ -28,10 +28,14 @@ class Parser:
                 for element in elementsWithAttribute:
                     classes = element.get_attribute_list('class')
                     if newClassName:
-                        if classes:
-                            element['class'] = ' '.join(map(str, element.get_attribute_list('class'))) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
-                        else:
+                        if None in classes:
+                            print('if')
+                            print('classes: ', classes)
                             element['class'] = 'show-icon icon-' + newClassName
+                        else:
+                            print('else')
+                            print('classes: ', classes)
+                            element['class'] = ' '.join(map(str, element.get_attribute_list('class'))) + ' ' + 'show-icon' + ' ' + 'icon-' + newClassName
             self.removeAttr()
         self.writeResult()
 
@@ -78,7 +82,6 @@ class Parser:
     		previous_indent = current_indent
     		pretty_soup += self.write_new_line(line, current_indent, desired_indent)
     	return pretty_soup
-
 
     def write_new_line(self, line, current_indent, desired_indent):
     	new_line = ""
