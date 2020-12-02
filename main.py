@@ -1,6 +1,7 @@
 import os
 import pathlib
 from pathlib import Path
+import json
 import re
 from bs4 import BeautifulSoup
 from iconMap import iconMap
@@ -16,11 +17,32 @@ class Parser:
         self.srcPath = scriptPath / "originalStatic"
         self.distPath = scriptPath / "__dist/"
 
-    def getAttributes(self):
-        return [line["data-icon"] for line in self.soup.find_all() if "data-icon" in line.attrs]
+    def getAttributes(self, soup):
+        print('     ')
+        print('     ')
+        print('     ')
+        print('     ')
+        print('     ')
+        print('     ')
+        # data = json.loads(s[3].string)
+        # print(data)
+        # print(self.soup)
+        # print('self.soup:', self.soup.find_all(attrs={"name" : "data-icon"}))
+        print('     ')
+        print('     ')
+        print('     ')
+        print('     ')
+        print('     ')
+        print('     ')
+        return [line["data-icon"] for line in soup.find_all() if "data-icon" in line.attrs]
 
-    def clean(self, file):
-        attributes = self.getAttributes()
+    def clean(self, soup):
+        attributes = self.getAttributes(soup)
+        print('**** ***** START **** *****')
+        print('ATTRIBUTES')
+        print('ATTRIBUTES', attributes)
+        print('ATTRIBUTES')
+        print('**** ***** STOP **** *****')
         if attributes:
             for attribute in list(set(attributes)):
                 newClassName = self.mapIconClassFromAttr(attribute)
@@ -57,11 +79,21 @@ class Parser:
 
         def file(self, filePath):
             with open(filePath) as file:
-                self.outerParser.makeSoup(file)
-                self.outerParser.clean(file)
+                soup = self.outerParser.makeSoup(file)
+                self.outerParser.clean(soup)
+                s = soup.find_all('script')
+                # innerSoup = self.soup.find_all('script')
+                innerString = s[0].string
+                print('/////////')
+                print(s[0].string)
+                print('/////////')
+                innerSoup = BeautifulSoup(innerString, 'html.parser')
+                innerSoup = self.outerParser.clean(innerSoup)
+                print(innerSoup)
 
     def makeSoup(self, file):
         self.soup = BeautifulSoup(file, 'html.parser')
+        return self.soup
 
     def createNewFile(self, root, file):
         pathInStatic = root.split('icon-scraper/originalStatic/')[1]
@@ -90,7 +122,8 @@ class Parser:
     	return new_line
 
     def writeResult(self):
-        self.newFile.write(self.soup_prettify2(self.soup, desired_indent=4))
+        self.newFile.write(str(self.soup))
+        # self.newFile.write(self.soup_prettify2(self.soup, desired_indent=4))
 
     def simplyCopy(self, root, fileName):
         originalPath = os.path.join(root,fileName)
